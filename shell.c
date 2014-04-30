@@ -6,6 +6,7 @@
 #include <sys/types.h>
 #include <errno.h>
 
+#define MAXLEN 70
 
 /*Print out the possible error*/
 void err(char* msg){
@@ -15,23 +16,43 @@ void err(char* msg){
 
 int main (int argc, char * argv[], char * envp[]) {
 
-	int child;
+	int child, i;
+	char input[MAXLEN];
+	char input_cmd[MAXLEN];
 
-	child = fork();
+	while (1) {	
 
-	if (child == -1)
-		err("Failed creating child\n");
+		printf("small-shell> ");
+		fgets(input, MAXLEN, stdin);
+		input[strlen(input)-1] = '\0';
 
-	if (child == 0) {
-		printf("In child process\n");
-		printf("Test 2\n");
-		printf("Test 3\n");
-	} else {
-		printf("In parent process\n");
-		printf("Test 4\n");
-		printf("Test 5\n");
-		printf("\n");
-		execlp("ls", "ls", NULL);
+		if (strcmp(input, "exit") == 0) {
+			break;
+		}
+
+		/*input_command = strtok(input, " ");*/
+		
+		for (i = 0; i < strlen(input); i++) {
+			if (input[i] == ' ') {
+				input_cmd[i] = '\0';
+				break;
+			} else {
+				input_cmd[i] = input[i];
+			}
+		}
+
+		child = fork();
+
+		if (child == -1)
+			err("Failed creating child\n");
+
+		if (child == 0) {
+			if (execlp(input_cmd, input, NULL) == -1) {
+				err("Error");
+			}
+		}
+		waitpid(child, NULL, 0);
+
 	}
 
 
