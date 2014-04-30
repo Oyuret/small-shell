@@ -9,54 +9,63 @@
 #define MAXLEN 70
 
 /*Print out the possible error*/
-void err(char* msg){
-	perror(msg);
-	exit(EXIT_FAILURE);
+void err(char* msg)
+{
+    perror(msg);
+    exit(EXIT_FAILURE);
 }
 
-int main (int argc, char * argv[], char * envp[]) {
+int main (int argc, char * argv[], char * envp[])
+{
 
-	int child, i;
-	char input[MAXLEN];
-	char input_cmd[MAXLEN];
+    int child, i;
+    char input[MAXLEN];
+    char * input_cmd[7];
 
-	while (1) {	
+    while (1)
+    {
 
-		printf("small-shell> ");
-		fgets(input, MAXLEN, stdin);
-		input[strlen(input)-1] = '\0';
+        /* Utskrift */
+        printf("small-shell> ");
 
-		if (strcmp(input, "exit") == 0) {
-			break;
-		}
+        /* Ta in en sträng */
+        fgets(input, MAXLEN, stdin);
+        input[strlen(input)-1] = '\0';
 
-		/*input_command = strtok(input, " ");*/
-		
-		for (i = 0; i < strlen(input); i++) {
-			if (input[i] == ' ') {
-				input_cmd[i] = '\0';
-				break;
-			} else {
-				input_cmd[i] = input[i];
-			}
-		}
+        /* Exit ?*/
+        if (strcmp(input, "exit") == 0)
+        {
+            break;
+        }
 
-		child = fork();
+        char * token = strtok(input, " ");
+        i=0;
+        while(token!=NULL) {
+            input_cmd[i]=token;
+            token = strtok(NULL, " ");
+            i++;
+        }
+        input_cmd[i] = NULL;
 
-		if (child == -1)
-			err("Failed creating child\n");
+        child = fork();
 
-		if (child == 0) {
-			if (execlp(input_cmd, input, NULL) == -1) {
-				err("Error");
-			}
-		}
-		waitpid(child, NULL, 0);
+        if (child == -1)
+            err("Failed creating child\n");
 
-	}
+        if (child == 0)
+        {
+
+            if (execvp(input_cmd[0], input_cmd) == -1)
+            {
+                err("Error");
+            }
+        }
+        waitpid(child, NULL, 0);
+
+    }
 
 
-	waitpid(child, NULL, 0);
+    waitpid(child, NULL, 0);
 
-	return 0;
+    return 0;
 }
