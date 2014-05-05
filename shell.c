@@ -56,19 +56,55 @@ void openInForeground(char * input_cmd[]) {
             err("Couldn't run the given inputs");
         }
     } else {
+	printf("Foreground process started with pid: %d\n", child);
         waitpid(child, NULL, 0);
+
+		/*Output tid-information*/
+	printf("Foreground process terminated, pid: %d\n", child);
         /*signal(SIGINT, NULL);*/
     }
 
 }
 
+void openInBackground(char * input_cmd[]) {
+
+    /* Fork to child process */
+    /*signal(SIGINT, SIG_IGN);*/
+    int child = fork();
+
+    /* Child or main */
+    if (child == -1)
+        err("Failed creating child\n");
+
+    if (child == 0) {
+        signal(SIGINT, NULL);
+        if (execvp(input_cmd[0], input_cmd) == -1) {
+            err("Couldn't run the given inputs");
+        }
+    } else {
+	printf("Background process started with pid: %d\n", child);
+        /*waitpid(child, NULL, 0);
+	printf("Foreground process terminated, pid: %d\n", child);*/
+        /*signal(SIGINT, NULL);*/
+    }
+
+}
+
+
 int main (int argc, char * argv[], char * envp[]) {
 
     char input[MAXLEN];
     char * input_cmd[7];
+    int status;
 
     signal(SIGINT, SIG_IGN);
     while (1) {
+	
+	pid_t pid = waitpid(-1, &status, WNOHANG);
+	if (pid > 0) {
+		/*Output tid-information*/
+		printf("Background process %d terminated with status %d.\n", pid, status);
+	}
 
         /* Utskrift */
         printf("small-shell> ");
@@ -85,11 +121,23 @@ int main (int argc, char * argv[], char * envp[]) {
         /* Parse the inputs */
         parseArgs(input, input_cmd);
 
+
+	/*
+	* Implementera cd
+
+
+	* Hantera background & foreground
+
+	*/
         openInForeground(input_cmd);
 
 
 
     }
+
+/*
+Skicka en SIGKILL till alla child-processer.
+*/
 
     return 0;
 }
