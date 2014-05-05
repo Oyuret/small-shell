@@ -84,6 +84,8 @@ int main (int argc, char * argv[], char * envp[]) {
         /* Parse the inputs */
         parseArgs(input, input_cmd);
 
+        openInForeground(input_cmd);
+
 
 
     }
