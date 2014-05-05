@@ -43,7 +43,7 @@ int parseArgs(char * argv, char * copy[]) {
 void openInForeground(char * input_cmd[]) {
 
     /* Fork to child process */
-    signal(SIGINT, SIG_IGN);
+    /*signal(SIGINT, SIG_IGN);*/
     int child = fork();
 
     /* Child or main */
@@ -57,7 +57,7 @@ void openInForeground(char * input_cmd[]) {
         }
     } else {
         waitpid(child, NULL, 0);
-        signal(SIGINT, NULL);
+        /*signal(SIGINT, NULL);*/
     }
 
 }
@@ -67,6 +67,7 @@ int main (int argc, char * argv[], char * envp[]) {
     char input[MAXLEN];
     char * input_cmd[7];
 
+    signal(SIGINT, SIG_IGN);
     while (1) {
 
         /* Utskrift */
