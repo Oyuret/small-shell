@@ -46,6 +46,8 @@ int main (int argc, char * argv[], char * envp[]) {
     char input[MAXLEN];
     char * input_cmd[7];
 
+    signal(SIGINT, SIG_IGN);
+
     while (1) {
 
         /* Utskrift */
@@ -71,10 +73,13 @@ int main (int argc, char * argv[], char * envp[]) {
             err("Failed creating child\n");
 
         if (child == 0) {
+    	    signal(SIGINT, NULL);
             if (execvp(input_cmd[0], input_cmd) == -1) {
                 err("Couldn't run the given inputs");
             }
-        }
+        } else if (child > 0) {
+
+	}
         waitpid(child, NULL, 0);
 
     }
