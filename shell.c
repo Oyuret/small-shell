@@ -40,13 +40,32 @@ int parseArgs(char * argv, char * copy[]) {
     return 0;
 }
 
+void openInForeground(char * input_cmd[]) {
+
+    /* Fork to child process */
+    signal(SIGINT, SIG_IGN);
+    int child = fork();
+
+    /* Child or main */
+    if (child == -1)
+        err("Failed creating child\n");
+
+    if (child == 0) {
+        signal(SIGINT, NULL);
+        if (execvp(input_cmd[0], input_cmd) == -1) {
+            err("Couldn't run the given inputs");
+        }
+    } else {
+        waitpid(child, NULL, 0);
+        signal(SIGINT, NULL);
+    }
+
+}
+
 int main (int argc, char * argv[], char * envp[]) {
 
-    int child;
     char input[MAXLEN];
     char * input_cmd[7];
-
-    signal(SIGINT, SIG_IGN);
 
     while (1) {
 
@@ -65,27 +84,9 @@ int main (int argc, char * argv[], char * envp[]) {
         /* Parse the inputs */
         parseArgs(input, input_cmd);
 
-        /* Fork to child process */
-        child = fork();
 
-        /* Child or main */
-        if (child == -1)
-            err("Failed creating child\n");
-
-        if (child == 0) {
-    	    signal(SIGINT, NULL);
-            if (execvp(input_cmd[0], input_cmd) == -1) {
-                err("Couldn't run the given inputs");
-            }
-        } else if (child > 0) {
-
-	}
-        waitpid(child, NULL, 0);
 
     }
-
-
-    waitpid(child, NULL, 0);
 
     return 0;
 }
