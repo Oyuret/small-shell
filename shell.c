@@ -6,6 +6,9 @@
 #include <sys/types.h>
 #include <errno.h>
 #include <stdbool.h>
+#include <sys/time.h>
+#include <signal.h>
+#include <sys/stat.h>
 
 #define MAXLEN 70
 
@@ -23,8 +26,11 @@ void err(char* msg) {
  * Returns the current time in milliseconds
  */
 long getTime() {
-    /*TODO: FIXA*/
-    return 0;
+    struct timeval tv;
+    struct timeval * tvpek = &tv;
+    gettimeofday(&tv, NULL);
+
+    return (long)(((long)(tvpek->tv_sec)*1000L) + ((long)(tvpek->tv_usec)/1000L));
 }
 
 /**
@@ -62,6 +68,7 @@ void openInForeground(char * input_cmd[]) {
 
     /* Fork to child process */
     signal(SIGINT, SIG_IGN);
+    long starttime = getTime();
     int child = fork();
 
     /* Child or main */
@@ -84,9 +91,8 @@ void openInForeground(char * input_cmd[]) {
         }
 
 
-
         /*Output tid-information*/
-        printf("Foreground process terminated, pid: %d. Status: %d.\n", child, status);
+        printf("Foreground process terminated, pid: %d. Status: %d. Time: %ldms\n", child, status, getTime()-starttime);
         signal(SIGINT, SIG_DFL);
     }
 
@@ -151,7 +157,7 @@ void checkBackgroundStatus(int options) {
 void killChildren() {
 
     /* Ignore SIGTERM so we don't kill ourselves */
-    sigset(SIGTERM, SIG_IGN);
+    signal(SIGTERM, SIG_IGN);
 
     /* Commit prolicide */
     int res = kill(0, SIGTERM);
@@ -159,7 +165,7 @@ void killChildren() {
         err("Failed to kill our children");
     }
 
-    sigset(SIGTERM, SIG_DFL);
+    signal(SIGTERM, SIG_DFL);
 
     /* Watch our children die */
     checkBackgroundStatus(0);
@@ -188,15 +194,16 @@ int main (int argc, char * argv[], char * envp[]) {
     char input[MAXLEN];
     char * input_cmd[7];
 
+
     /* We start with no background children */
     activeBackground = 0;
 
-    /* Setup signal handlers*/
-    if(sigset(SIGINT, interruptHandler)==-1) {
+    /* Setup signal handlers */
+    if (signal(SIGINT, interruptHandler) == SIG_ERR) {
         err("Failed to setup interrupt handler");
     }
 
-    if(sigset(SIGTERM, terminationHandler)==-1) {
+    if (signal(SIGTERM, terminationHandler) == SIG_ERR) {
         err("Failed to setup termination handler");
     }
 
@@ -221,6 +228,18 @@ int main (int argc, char * argv[], char * envp[]) {
         /* Parse the inputs */
         if(parseArgs(input, input_cmd)!=0) continue;
 
+        if (strcmp(input_cmd[0], "cd") == 0) {
+             if (input_cmd[1] == NULL || strcmp(input_cmd[1], "") == 0) {
+                 printf("Error!\ncd usage:\ncd <directory>\n");
+                 continue;
+	     }
+             struct stat sb;
+             if (stat(input_cmd[1], &sb) == 0 && S_ISDIR(sb.st_mode)) {
+                   
+             } else {
+
+             }
+        }
 
         /* Check if we should run in the background or not */
         int i=0;
